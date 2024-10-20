@@ -1,0 +1,33 @@
+Explanation of logistic_regression.py
+Loading Data:
+
+Reads the pre-split classification datasets from the outputs/ folder.
+Training the Model:
+
+Initializes and trains a LogisticRegression model using the training data.
+max_iter=1000 ensures convergence.
+Evaluating the Model:
+
+Predicts on the test set and calculates evaluation metrics:
+Accuracy
+Precision
+Recall
+F1-Score
+ROC-AUC
+Generates and saves:
+Confusion Matrix: Visual representation of actual vs. predicted classes.
+ROC Curve: Illustrates the diagnostic ability of the classifier.
+Saving the Model:
+
+Saves the trained model using joblib for future use.
+c. Run Logistic Regression
+Navigate to src/ Directory:
+
+Right-click on logistic_regression.py and select Run 'logistic_regression'.
+Check Outputs:
+
+Console: Review evaluation metrics and classification report.
+outputs/models/: logistic_regression_model.pkl
+outputs/figures/:
+logistic_regression_confusion_matrix.png
+logistic_regression_roc_curve.png
