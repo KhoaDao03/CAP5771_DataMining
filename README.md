@@ -1,5 +1,5 @@
 
-# Student Performance Prediction
+# Student Performance Prediction Project
 
 This project aims to predict student performance using both regression and classification techniques. Two types of models are built: a **Linear Regression** model to predict student grades, and a **Logistic Regression** model to classify whether a student will pass or fail. The data used in this project comes from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Student+Performance).
 
