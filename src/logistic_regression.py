@@ -10,7 +10,14 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 def load_data(project_dir):
+    """
+    Loads the pre-split training and testing datasets for classification from the outputs directory.
+
+    :param project_dir: Path to the project root directory.
+    :return: Training and testing datasets for features (X) and target (y).
+    """
     outputs_dir = os.path.join(project_dir, 'outputs')
     X_train = pd.read_csv(os.path.join(outputs_dir, 'X_train_clf.csv'))
     X_test = pd.read_csv(os.path.join(outputs_dir, 'X_test_clf.csv'))
@@ -18,12 +25,40 @@ def load_data(project_dir):
     y_test = pd.read_csv(os.path.join(outputs_dir, 'y_test_clf.csv'))
     return X_train, X_test, y_train, y_test
 
+
 def train_logistic_regression(X_train, y_train):
+    """
+    Initializes and trains a LogisticRegression model using the training data.
+
+    :param X_train: Features for training the model.
+    :param y_train: Target values (pass/fail) for training the model.
+    :return: Trained LogisticRegression model.
+    """
     clf = LogisticRegression(max_iter=1000)
     clf.fit(X_train, y_train.values.ravel())
     return clf
 
+
 def evaluate_model(model, X_test, y_test, project_dir):
+    """
+    Evaluates the trained LogisticRegression model by predicting on the test data and calculating metrics.
+
+    Metrics:
+    - Accuracy
+    - Precision
+    - Recall
+    - F1-Score
+    - ROC-AUC
+
+    Generates and saves:
+    - Confusion Matrix: Visual representation of actual vs predicted classes.
+    - ROC Curve: Illustrates the diagnostic ability of the classifier.
+
+    :param model: Trained LogisticRegression model.
+    :param X_test: Test features.
+    :param y_test: Actual test target values (pass/fail).
+    :param project_dir: Path to the project root directory for saving plots.
+    """
     predictions = model.predict(X_test)
     probabilities = model.predict_proba(X_test)[:, 1]
 
@@ -50,7 +85,8 @@ def evaluate_model(model, X_test, y_test, project_dir):
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
     figures_dir = os.path.join(project_dir, 'outputs', 'figures')
-    plt.savefig(os.path.join(figures_dir, 'logistic_regression_confusion_matrix.png'))
+    plt.savefig(os.path.join(
+        figures_dir, 'logistic_regression_confusion_matrix.png'))
     plt.close()
 
     # ROC Curve
@@ -66,13 +102,25 @@ def evaluate_model(model, X_test, y_test, project_dir):
     plt.savefig(os.path.join(figures_dir, 'logistic_regression_roc_curve.png'))
     plt.close()
 
+
 def save_model(model, project_dir, filename='logistic_regression_model.pkl'):
+    """
+    Saves the trained LogisticRegression model to the outputs/models/ directory using joblib.
+
+    :param model: Trained LogisticRegression model.
+    :param project_dir: Path to the project root directory for saving the model.
+    :param filename: Name of the file to save the model as (default is 'logistic_regression_model.pkl').
+    """
     models_dir = os.path.join(project_dir, 'outputs', 'models')
     os.makedirs(models_dir, exist_ok=True)
     joblib.dump(model, os.path.join(models_dir, filename))
     print(f"Model saved to outputs/models/{filename}")
 
+
 def main():
+    """
+    Main function to load the data, train the model, evaluate it, and save both the model and evaluation plots.
+    """
     # Determine the absolute path to the project root
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_dir = os.path.abspath(os.path.join(script_dir, '..'))
@@ -92,6 +140,7 @@ def main():
 
     # Save model
     save_model(lr_model, project_dir)
+
 
 if __name__ == "__main__":
     main()
