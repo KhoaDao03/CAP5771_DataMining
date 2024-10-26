@@ -170,7 +170,10 @@ def save_model(model, scaler, project_dir, filename):
     """
     models_dir = os.path.join(project_dir, 'outputs', 'models')
     os.makedirs(models_dir, exist_ok=True)
-    # Save model
+    # Ensure the filename uses the .keras extension
+    if not filename.endswith('.keras'):
+        filename = filename.replace('.h5', '.keras')
+    # Save model in Keras format
     model.save(os.path.join(models_dir, filename))
     # Save scaler
     joblib.dump(scaler, os.path.join(models_dir, f"{filename}_scaler.pkl"))

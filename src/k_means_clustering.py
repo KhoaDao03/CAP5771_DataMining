@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import joblib
 
 def load_data(project_dir):
     """
