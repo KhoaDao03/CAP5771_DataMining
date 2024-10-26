@@ -22,9 +22,14 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 import joblib
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.callbacks import EarlyStopping
+
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense
+# from tensorflow.keras.callbacks import EarlyStopping
+
+Sequential = tf.keras.models.Sequential
+Dense = tf.keras.layers.Dense
+EarlyStopping = tf.keras.callbacks.EarlyStopping
 
 def load_data(project_dir, task='regression'):
     """
