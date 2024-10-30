@@ -71,7 +71,7 @@ def main():
     data_scaled, scaler = load_data(project_dir)
 
     # Perform K-Means Clustering
-    n_clusters = 3  # You can adjust this number
+    n_clusters = 3  # adjustable
     kmeans_model, pca_model = k_means_clustering(data_scaled, project_dir, n_clusters=n_clusters)
 
     # Save models
