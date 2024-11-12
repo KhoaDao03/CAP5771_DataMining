@@ -104,6 +104,17 @@ def evaluate_regression_model(model, X_test, y_test, project_dir, model_name='an
     plt.savefig(os.path.join(figures_dir, f'{model_name}_regression_actual_vs_predicted.png'))
     plt.close()
 
+    # After predictions
+    predictions = model.predict(X_test).flatten()
+
+    # Actual values
+    actual = y_test  # Loaded from test set
+
+    # Compare
+    comparison = pd.DataFrame({'Actual': actual, 'Predicted': predictions})
+    # print(comparison.head(50))
+
+
 def ann_classification(X_train, y_train):
     """
     Train an Artificial Neural Network for classification.

@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 import joblib
 
 def load_data(project_dir):
@@ -27,11 +28,23 @@ def load_data(project_dir):
 
 def k_means_clustering(data_scaled, project_dir, n_clusters=3):
     """
-    Perform K-Means clustering and visualize the results.
+    Perform K-Means clustering, evaluate, and visualize the results.
     """
     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
     kmeans.fit(data_scaled)
     labels = kmeans.labels_
+
+    # Evaluate clustering
+    inertia = kmeans.inertia_
+    silhouette_avg = silhouette_score(data_scaled, labels)
+    calinski_harabasz = calinski_harabasz_score(data_scaled, labels)
+    davies_bouldin = davies_bouldin_score(data_scaled, labels)
+
+    print(f"Evaluation Metrics for K-Means with {n_clusters} clusters:")
+    print(f"Inertia (Within-Cluster Sum of Squares): {inertia:.2f}")
+    print(f"Silhouette Score: {silhouette_avg:.2f}")
+    print(f"Calinski-Harabasz Index: {calinski_harabasz:.2f}")
+    print(f"Davies-Bouldin Index: {davies_bouldin:.2f}\n")
 
     # Reduce dimensions for visualization
     pca = PCA(n_components=2)
@@ -55,7 +68,7 @@ def k_means_clustering(data_scaled, project_dir, n_clusters=3):
 
     # Analyze cluster distribution
     cluster_counts = pd.Series(labels).value_counts()
-    print(f"Cluster counts:\n{cluster_counts}")
+    print(f"Cluster counts:\n{cluster_counts}\n")
 
     return kmeans, pca
 
