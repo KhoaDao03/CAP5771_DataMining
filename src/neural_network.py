@@ -181,6 +181,18 @@ def evaluate_classification_model(model, X_test, y_test, project_dir, model_name
     plt.savefig(os.path.join(figures_dir, f'{model_name}_classification_roc_curve.png'))
     plt.close()
 
+    # After predictions
+    probabilities = model.predict(X_test).flatten()
+    predictions = (probabilities >= 0.5).astype(int)
+
+    # Actual values
+    actual = y_test  # Loaded from test set
+
+    # Compare
+    comparison = pd.DataFrame({'Actual': actual, 'Predicted': predictions})
+    # print(comparison.head(50))
+
+
 def save_model(model, scaler, project_dir, filename):
     """
     Save the trained model and scaler to the models directory.
