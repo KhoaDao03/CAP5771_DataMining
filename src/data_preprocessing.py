@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import os
+import joblib  # Ensure joblib is imported
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
@@ -48,7 +49,7 @@ def merge_datasets(df_mat, df_por):
     return df_final
 
 
-def preprocess_data(df):
+def preprocess_data(df, outputs_dir):
     # Handle missing values (if any)
     df = df.replace('?', np.nan)
     df = df.dropna()
@@ -65,6 +66,10 @@ def preprocess_data(df):
         le = LabelEncoder()
         df[col] = le.fit_transform(df[col])
         label_encoders[col] = le
+        # Save each LabelEncoder
+        encoder_filename = os.path.join(outputs_dir, f'label_encoder_{col}.pkl')
+        joblib.dump(le, encoder_filename)
+        print(f"Saved LabelEncoder for {col} to {encoder_filename}")
 
     # Feature Scaling
     scaler = StandardScaler()
@@ -73,7 +78,12 @@ def preprocess_data(df):
                     'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2']
     df[numeric_cols] = scaler.fit_transform(df[numeric_cols])
 
-    return df, label_encoders, scaler
+    # Save the scaler
+    scaler_filename = os.path.join(outputs_dir, 'scaler.pkl')
+    joblib.dump(scaler, scaler_filename)
+    print(f"Saved StandardScaler to {scaler_filename}")
+
+    return df
 
 
 def split_data(df, target, drop_cols=None, test_size=0.2, random_state=42):
@@ -111,15 +121,15 @@ def main():
     # Merge datasets
     df = merge_datasets(df_mat, df_por)
 
-    # Create classification target
-    df = prepare_classification_target(df, threshold=10)
-
-    # Preprocess data
-    df, label_encoders, scaler = preprocess_data(df)
-
     # Create outputs directory if it doesn't exist
     outputs_dir = os.path.join(project_dir, 'outputs')
     os.makedirs(outputs_dir, exist_ok=True)
+
+    # Create classification target
+    df = prepare_classification_target(df, threshold=10)
+
+    # Preprocess data and save encoders and scaler
+    df = preprocess_data(df, outputs_dir)
 
     # Save preprocessed data
     preprocessed_path = os.path.join(outputs_dir, 'preprocessed_data.csv')
@@ -127,7 +137,7 @@ def main():
     print(f"Preprocessed data saved to {preprocessed_path}")
 
     # Split data for regression (exclude 'G3' and 'pass' from features)
-    X_train_reg, X_test_reg, y_train_reg, y_test_reg = split_data(df, 'G3', drop_cols=['G3', 'pass'])
+    X_train_reg, X_test_reg, y_train_reg, y_test_reg = split_data(df, 'G3', drop_cols=['pass'])
 
     # Split data for classification (exclude 'G3' from features)
     X_train_clf, X_test_clf, y_train_clf, y_test_clf = split_data(df, 'pass', drop_cols=['G3'])

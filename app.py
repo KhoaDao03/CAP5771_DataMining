@@ -1,6 +1,7 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import numpy as np
 import os
 
 def load_models(project_dir):
@@ -11,6 +12,23 @@ def load_models(project_dir):
     regression_model = joblib.load(os.path.join(models_dir, 'xgboost_regression_model.pkl'))
     classification_model = joblib.load(os.path.join(models_dir, 'xgboost_classification_model.pkl'))
     return regression_model, classification_model
+
+def load_preprocessors(project_dir):
+    """
+    Load the label encoders and scaler.
+    """
+    outputs_dir = os.path.join(project_dir, 'outputs')
+    encoders = {}
+    categorical_cols = ['school', 'sex', 'address', 'famsize', 'Pstatus',
+                        'Mjob', 'Fjob', 'reason', 'guardian',
+                        'schoolsup', 'famsup', 'paid',
+                        'activities', 'nursery', 'higher',
+                        'internet', 'romantic']
+    for col in categorical_cols:
+        encoder_path = os.path.join(outputs_dir, f'label_encoder_{col}.pkl')
+        encoders[col] = joblib.load(encoder_path)
+    scaler = joblib.load(os.path.join(outputs_dir, 'scaler.pkl'))
+    return encoders, scaler
 
 def main():
     st.title("Student Performance Prediction App")
@@ -23,10 +41,10 @@ def main():
     # Load models
     regression_model, classification_model = load_models(project_dir)
 
-    st.sidebar.header('Input Features')
+    # Load encoders and scaler
+    encoders, scaler = load_preprocessors(project_dir)
 
-    # Binary Variables Mapping
-    binary_options = {'yes': 1, 'no': 0, 'F': 0, 'M': 1, 'U': 0, 'R': 1, 'LE3': 0, 'GT3': 1, 'T': 1, 'A': 0}
+    st.sidebar.header('Input Features')
 
     # Feature Inputs
 
@@ -165,68 +183,39 @@ def main():
     # Convert the dictionary to a DataFrame
     input_data = pd.DataFrame(input_dict, index=[0])
 
-    # Encode binary variables
-    binary_vars = ['sex', 'address', 'famsize', 'Pstatus', 'schoolsup', 'famsup',
-                   'paid', 'activities', 'nursery', 'higher', 'internet', 'romantic']
-    for var in binary_vars:
-        input_data[var] = input_data[var].map(binary_options)
+    # Encode categorical variables using the loaded LabelEncoders
+    categorical_cols = ['school', 'sex', 'address', 'famsize', 'Pstatus',
+                        'Mjob', 'Fjob', 'reason', 'guardian',
+                        'schoolsup', 'famsup', 'paid',
+                        'activities', 'nursery', 'higher',
+                        'internet', 'romantic']
 
-    # Map categorical variables using label encoding
-    school_mapping = {'GP': 0, 'MS': 1}
-    Mjob_mapping = {'at_home': 0, 'health': 1, 'other': 2, 'services': 3, 'teacher': 4}
-    Fjob_mapping = {'at_home': 0, 'health': 1, 'other': 2, 'services': 3, 'teacher': 4}
-    reason_mapping = {'home': 0, 'reputation': 1, 'course': 2, 'other': 3}
-    guardian_mapping = {'mother': 0, 'father': 1, 'other': 2}
+    for col in categorical_cols:
+        le = encoders[col]
+        input_data[col] = le.transform([input_data[col].iloc[0]])
 
-    input_data['school'] = input_data['school'].map(school_mapping)
-    input_data['Mjob'] = input_data['Mjob'].map(Mjob_mapping)
-    input_data['Fjob'] = input_data['Fjob'].map(Fjob_mapping)
-    input_data['reason'] = input_data['reason'].map(reason_mapping)
-    input_data['guardian'] = input_data['guardian'].map(guardian_mapping)
+    # Feature Scaling using the loaded scaler
+    numeric_cols = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime',
+                    'failures', 'famrel', 'freetime', 'goout',
+                    'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2']
+    input_data[numeric_cols] = scaler.transform(input_data[numeric_cols])
 
     # Define expected columns
     expected_columns = [
-        'school',
-        'sex',
-        'age',
-        'address',
-        'famsize',
-        'Pstatus',
-        'Medu',
-        'Fedu',
-        'Mjob',
-        'Fjob',
-        'reason',
-        'guardian',
-        'traveltime',
-        'studytime',
-        'failures',
-        'schoolsup',
-        'famsup',
-        'paid',
-        'activities',
-        'nursery',
-        'higher',
-        'internet',
-        'romantic',
-        'famrel',
-        'freetime',
-        'goout',
-        'Dalc',
-        'Walc',
-        'health',
-        'absences',
-        'G1',
-        'G2'
+        'school', 'sex', 'age', 'address', 'famsize', 'Pstatus',
+        'Medu', 'Fedu', 'Mjob', 'Fjob', 'reason', 'guardian',
+        'traveltime', 'studytime', 'failures', 'schoolsup',
+        'famsup', 'paid', 'activities', 'nursery', 'higher',
+        'internet', 'romantic', 'famrel', 'freetime', 'goout',
+        'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2'
     ]
 
     # Ensure all expected columns are present
-    missing_cols = set(expected_columns) - set(input_data.columns)
-    for col in missing_cols:
-        input_data[col] = 0
-
-    # Reorder columns to match expected_columns
     input_data = input_data[expected_columns]
+
+    # Display input data for debugging
+    st.write("Preprocessed Input Data:")
+    st.write(input_data)
 
     # Prediction
     if st.button('Predict'):
