@@ -1,9 +1,5 @@
-import streamlit as st
-import joblib
-import pandas as pd
-import numpy as np
-import os
-
+# To run the file run:
+# python -m streamlit run app.py
 import streamlit as st
 import joblib
 import pandas as pd
@@ -25,7 +21,36 @@ def load_models(project_dir):
     regression_model_ann = tf.keras.models.load_model(os.path.join(models_dir, 'ann_regression_model.h5'))
     classification_model_ann = tf.keras.models.load_model(os.path.join(models_dir, 'ann_classification_model.h5'))
     
-    return (regression_model_xgb, classification_model_xgb, regression_model_ann, classification_model_ann)
+    # Load Random Forest models
+    regression_model_rf = joblib.load(os.path.join(models_dir, 'random_forest_regression_model.pkl'))
+    classification_model_rf = joblib.load(os.path.join(models_dir, 'random_forest_classification_model.pkl'))
+    
+    # Load Decision Tree models
+    regression_model_dt = joblib.load(os.path.join(models_dir, 'decision_tree_regression_model.pkl'))
+    classification_model_dt = joblib.load(os.path.join(models_dir, 'decision_tree_classification_model.pkl'))
+    
+    # Load Linear Regression model
+    regression_model_lr = joblib.load(os.path.join(models_dir, 'linear_regression_model.pkl'))
+    
+    # Load Logistic Regression model
+    classification_model_logr = joblib.load(os.path.join(models_dir, 'logistic_regression_model.pkl'))
+    
+    # Load SVM models
+    svm_reg = joblib.load(os.path.join(models_dir, 'svm_regression_model.pkl'))
+    regression_model_svm = svm_reg['model']
+    scaler_reg_svm = svm_reg['scaler']
+    
+    svm_clf = joblib.load(os.path.join(models_dir, 'svm_classification_model.pkl'))
+    classification_model_svm = svm_clf['model']
+    scaler_clf_svm = svm_clf['scaler']
+    
+    return (regression_model_xgb, classification_model_xgb, 
+            regression_model_ann, classification_model_ann,
+            regression_model_rf, classification_model_rf,
+            regression_model_dt, classification_model_dt,
+            regression_model_lr, classification_model_logr,
+            regression_model_svm, classification_model_svm,
+            scaler_reg_svm, scaler_clf_svm)
 
 def load_preprocessors(project_dir):
     """
@@ -46,7 +71,7 @@ def load_preprocessors(project_dir):
 
 def main():
     st.title("Student Performance Prediction App")
-    st.write("Input the student's features to get the predicted final grade and pass/fail status from both XGBoost and Neural Network models.")
+    st.write("Input the student's features to get the predicted final grade and pass/fail status from all models.")
     
     # Determine the absolute path to the project root
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -54,7 +79,12 @@ def main():
     
     # Load models
     (regression_model_xgb, classification_model_xgb, 
-     regression_model_ann, classification_model_ann) = load_models(project_dir)
+     regression_model_ann, classification_model_ann,
+     regression_model_rf, classification_model_rf,
+     regression_model_dt, classification_model_dt,
+     regression_model_lr, classification_model_logr,
+     regression_model_svm, classification_model_svm,
+     scaler_reg_svm, scaler_clf_svm) = load_models(project_dir)
     
     # Load encoders and scaler
     encoders, scaler = load_preprocessors(project_dir)
@@ -214,7 +244,7 @@ def main():
 
     # Apply scaling to numeric columns
     input_data[numeric_cols] = scaler.transform(input_data[numeric_cols])
-
+    
     # Define expected columns
     expected_columns = [
         'school', 'sex', 'age', 'address', 'famsize', 'Pstatus',
@@ -227,9 +257,17 @@ def main():
 
     # Ensure all expected columns are present and in the correct order
     input_data = input_data[expected_columns]
-     # Display input data for debugging
-    st.write("Preprocessed Input Data:")
-    st.write(input_data)
+    
+    # Make copies for SVM models
+    input_data_svm_reg = input_data.copy()
+    input_data_svm_clf = input_data.copy()
+    
+    # Scale all features for SVM regression model
+    input_data_svm_reg = scaler_reg_svm.transform(input_data_svm_reg)
+    
+    # Scale all features for SVM classification model
+    input_data_svm_clf = scaler_clf_svm.transform(input_data_svm_clf)
+    
     # Prediction
     if st.button('Predict'):
         # XGBoost Regression Prediction
@@ -238,9 +276,25 @@ def main():
         # Neural Network Regression Prediction
         reg_prediction_ann = regression_model_ann.predict(input_data)[0][0]
         
+        # Random Forest Regression Prediction
+        reg_prediction_rf = regression_model_rf.predict(input_data)[0]
+        
+        # Decision Tree Regression Prediction
+        reg_prediction_dt = regression_model_dt.predict(input_data)[0]
+        
+        # Linear Regression Prediction
+        reg_prediction_lr = regression_model_lr.predict(input_data)[0]
+        
+        # SVM Regression Prediction
+        reg_prediction_svm = regression_model_svm.predict(input_data_svm_reg)[0]
+        
         st.subheader("Predicted Final Grade (G3)")
         st.write(f"**XGBoost Prediction:** {reg_prediction_xgb:.2f} out of 20.")
         st.write(f"**Neural Network Prediction:** {reg_prediction_ann:.2f} out of 20.")
+        st.write(f"**Random Forest Prediction:** {reg_prediction_rf:.2f} out of 20.")
+        st.write(f"**Decision Tree Prediction:** {reg_prediction_dt:.2f} out of 20.")
+        st.write(f"**Linear Regression Predictions:** {', '.join([f'{x:.2f}' for x in reg_prediction_lr])} out of 20.")
+        st.write(f"**SVM Prediction:** {reg_prediction_svm:.2f} out of 20.")
         
         # XGBoost Classification Prediction
         clf_prediction_xgb = classification_model_xgb.predict(input_data)[0]
@@ -253,10 +307,33 @@ def main():
         clf_probability_ann = probability_ann
         pass_fail_ann = 'Pass' if clf_prediction_ann == 1 else 'Fail'
         
+        # Random Forest Classification Prediction
+        clf_prediction_rf = classification_model_rf.predict(input_data)[0]
+        clf_probability_rf = classification_model_rf.predict_proba(input_data)[0][int(clf_prediction_rf)]
+        pass_fail_rf = 'Pass' if clf_prediction_rf == 1 else 'Fail'
+        
+        # Decision Tree Classification Prediction
+        clf_prediction_dt = classification_model_dt.predict(input_data)[0]
+        clf_probability_dt = classification_model_dt.predict_proba(input_data)[0][int(clf_prediction_dt)]
+        pass_fail_dt = 'Pass' if clf_prediction_dt == 1 else 'Fail'
+        
+        # Logistic Regression Prediction
+        clf_prediction_logr = classification_model_logr.predict(input_data)[0]
+        clf_probability_logr = classification_model_logr.predict_proba(input_data)[0][int(clf_prediction_logr)]
+        pass_fail_logr = 'Pass' if clf_prediction_logr == 1 else 'Fail'
+        
+        # SVM Classification Prediction
+        clf_prediction_svm = classification_model_svm.predict(input_data_svm_clf)[0]
+        clf_probability_svm = classification_model_svm.predict_proba(input_data_svm_clf)[0][int(clf_prediction_svm)]
+        pass_fail_svm = 'Pass' if clf_prediction_svm == 1 else 'Fail'
+        
         st.subheader("Predicted Pass/Fail Status")
         st.write(f"**XGBoost Prediction:** {pass_fail_xgb} (Confidence: {clf_probability_xgb*100:.2f}%)")
         st.write(f"**Neural Network Prediction:** {pass_fail_ann} (Confidence: {clf_probability_ann*100:.2f}%)")
-
+        st.write(f"**Random Forest Prediction:** {pass_fail_rf} (Confidence: {clf_probability_rf*100:.2f}%)")
+        st.write(f"**Decision Tree Prediction:** {pass_fail_dt} (Confidence: {clf_probability_dt*100:.2f}%)")
+        st.write(f"**Logistic Regression Prediction:** {pass_fail_logr} (Confidence: {clf_probability_logr*100:.2f}%)")
+        st.write(f"**SVM Prediction:** {pass_fail_svm} (Confidence: {clf_probability_svm*100:.2f}%)")
 
 if __name__ == '__main__':
     main()
