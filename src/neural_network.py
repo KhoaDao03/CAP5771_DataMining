@@ -50,12 +50,20 @@ def load_data(project_dir, task='regression'):
     else:
         raise ValueError("Task must be 'regression' or 'classification'")
 
-    # Scale features
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    # Load the scaler used in data preprocessing
+    scaler = joblib.load(os.path.join(outputs_dir, 'scaler.pkl'))
+
+    # Numeric columns to scale
+    numeric_cols = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime',
+                    'failures', 'famrel', 'freetime', 'goout',
+                    'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2']
+
+    # Apply scaling to numeric columns
+    X_train[numeric_cols] = scaler.transform(X_train[numeric_cols])
+    X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
 
     return X_train, X_test, y_train.squeeze(), y_test.squeeze(), scaler
+
 
 def ann_regression(X_train, y_train):
     """
@@ -199,13 +207,11 @@ def save_model(model, scaler, project_dir, filename):
     """
     models_dir = os.path.join(project_dir, 'outputs', 'models')
     os.makedirs(models_dir, exist_ok=True)
-    # Ensure the filename uses the .keras extension
-    if not filename.endswith('.keras'):
-        filename = filename.replace('.h5', '.keras')
     # Save model in Keras format
     model.save(os.path.join(models_dir, filename))
     # Save scaler
-    joblib.dump(scaler, os.path.join(models_dir, f"{filename}_scaler.pkl"))
+    scaler_filename = os.path.join(models_dir, f"{filename}_scaler.pkl")
+    joblib.dump(scaler, scaler_filename)
     print(f"Model and scaler saved to outputs/models/{filename}")
 
 def main():

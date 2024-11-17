@@ -4,14 +4,28 @@ import pandas as pd
 import numpy as np
 import os
 
+import streamlit as st
+import joblib
+import pandas as pd
+import numpy as np
+import os
+import tensorflow as tf
+
 def load_models(project_dir):
     """
     Load the trained models.
     """
     models_dir = os.path.join(project_dir, 'outputs', 'models')
-    regression_model = joblib.load(os.path.join(models_dir, 'xgboost_regression_model.pkl'))
-    classification_model = joblib.load(os.path.join(models_dir, 'xgboost_classification_model.pkl'))
-    return regression_model, classification_model
+    
+    # Load XGBoost models
+    regression_model_xgb = joblib.load(os.path.join(models_dir, 'xgboost_regression_model.pkl'))
+    classification_model_xgb = joblib.load(os.path.join(models_dir, 'xgboost_classification_model.pkl'))
+    
+    # Load ANN models
+    regression_model_ann = tf.keras.models.load_model(os.path.join(models_dir, 'ann_regression_model.h5'))
+    classification_model_ann = tf.keras.models.load_model(os.path.join(models_dir, 'ann_classification_model.h5'))
+    
+    return (regression_model_xgb, classification_model_xgb, regression_model_ann, classification_model_ann)
 
 def load_preprocessors(project_dir):
     """
@@ -32,21 +46,20 @@ def load_preprocessors(project_dir):
 
 def main():
     st.title("Student Performance Prediction App")
-    st.write("Input the student's features to get the predicted final grade and pass/fail status.")
-
+    st.write("Input the student's features to get the predicted final grade and pass/fail status from both XGBoost and Neural Network models.")
+    
     # Determine the absolute path to the project root
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_dir = os.path.abspath(os.path.join(script_dir, '.'))
-
+    
     # Load models
-    regression_model, classification_model = load_models(project_dir)
-
+    (regression_model_xgb, classification_model_xgb, 
+     regression_model_ann, classification_model_ann) = load_models(project_dir)
+    
     # Load encoders and scaler
     encoders, scaler = load_preprocessors(project_dir)
-
+    
     st.sidebar.header('Input Features')
-
-    # Feature Inputs
 
     # 1. school
     school = st.sidebar.selectbox('School', options=['GP', 'MS'])
@@ -182,7 +195,7 @@ def main():
 
     # Convert the dictionary to a DataFrame
     input_data = pd.DataFrame(input_dict, index=[0])
-
+    
     # Encode categorical variables using the loaded LabelEncoders
     categorical_cols = ['school', 'sex', 'address', 'famsize', 'Pstatus',
                         'Mjob', 'Fjob', 'reason', 'guardian',
@@ -193,11 +206,13 @@ def main():
     for col in categorical_cols:
         le = encoders[col]
         input_data[col] = le.transform([input_data[col].iloc[0]])
-
-    # Feature Scaling using the loaded scaler
+    
+    # Numeric columns to scale
     numeric_cols = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime',
                     'failures', 'famrel', 'freetime', 'goout',
                     'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2']
+
+    # Apply scaling to numeric columns
     input_data[numeric_cols] = scaler.transform(input_data[numeric_cols])
 
     # Define expected columns
@@ -210,27 +225,38 @@ def main():
         'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2'
     ]
 
-    # Ensure all expected columns are present
+    # Ensure all expected columns are present and in the correct order
     input_data = input_data[expected_columns]
-
-    # Display input data for debugging
+     # Display input data for debugging
     st.write("Preprocessed Input Data:")
     st.write(input_data)
-
     # Prediction
     if st.button('Predict'):
-        # Regression Prediction
-        reg_prediction = regression_model.predict(input_data)[0]
+        # XGBoost Regression Prediction
+        reg_prediction_xgb = regression_model_xgb.predict(input_data)[0]
+        
+        # Neural Network Regression Prediction
+        reg_prediction_ann = regression_model_ann.predict(input_data)[0][0]
+        
         st.subheader("Predicted Final Grade (G3)")
-        st.write(f"The predicted final grade is: **{reg_prediction:.2f}** out of 20.")
-
-        # Classification Prediction
-        clf_prediction = classification_model.predict(input_data)[0]
-        clf_probability = classification_model.predict_proba(input_data)[0][int(clf_prediction)]
-        pass_fail = 'Pass' if clf_prediction == 1 else 'Fail'
+        st.write(f"**XGBoost Prediction:** {reg_prediction_xgb:.2f} out of 20.")
+        st.write(f"**Neural Network Prediction:** {reg_prediction_ann:.2f} out of 20.")
+        
+        # XGBoost Classification Prediction
+        clf_prediction_xgb = classification_model_xgb.predict(input_data)[0]
+        clf_probability_xgb = classification_model_xgb.predict_proba(input_data)[0][int(clf_prediction_xgb)]
+        pass_fail_xgb = 'Pass' if clf_prediction_xgb == 1 else 'Fail'
+        
+        # Neural Network Classification Prediction
+        probability_ann = classification_model_ann.predict(input_data)[0][0]
+        clf_prediction_ann = int(probability_ann >= 0.5)
+        clf_probability_ann = probability_ann
+        pass_fail_ann = 'Pass' if clf_prediction_ann == 1 else 'Fail'
+        
         st.subheader("Predicted Pass/Fail Status")
-        st.write(f"The student is predicted to: **{pass_fail}**")
-        st.write(f"Prediction Confidence: **{clf_probability*100:.2f}%**")
+        st.write(f"**XGBoost Prediction:** {pass_fail_xgb} (Confidence: {clf_probability_xgb*100:.2f}%)")
+        st.write(f"**Neural Network Prediction:** {pass_fail_ann} (Confidence: {clf_probability_ann*100:.2f}%)")
+
 
 if __name__ == '__main__':
     main()
