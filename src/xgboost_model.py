@@ -197,6 +197,7 @@ def save_model(model, project_dir, filename):
     print(f"Model saved to outputs/models/{filename}")
 
 def main():
+
     """
     Main function to execute XGBoost Regression and Classification.
     """
@@ -244,6 +245,104 @@ def main():
 
     # Save Classification Model
     save_model(xgb_clf_model, project_dir, filename='xgboost_classification_model.pkl')
+
+
+
+def evaluate_regression_model(model, X_test, y_test, project_dir, model_name='xgboost'):
+    """
+    Evaluate the regression model and generate evaluation metrics and plots.
+    Additionally, save the input features with actual and predicted values.
+    """
+    predictions = model.predict(X_test)
+    mae = mean_absolute_error(y_test, predictions)
+    mse = mean_squared_error(y_test, predictions)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, predictions)
+
+    print(f"{model_name.upper()} Regression Evaluation:")
+    print(f"MAE: {mae:.2f}")
+    print(f"MSE: {mse:.2f}")
+    print(f"RMSE: {rmse:.2f}")
+    print(f"R² Score: {r2:.2f}")
+
+    # Combine input features with actual and predicted values
+    results_df = X_test.copy()
+    results_df['Actual'] = y_test
+    results_df['Predicted'] = predictions
+    results_dir = os.path.join(project_dir, 'outputs', 'results')
+    os.makedirs(results_dir, exist_ok=True)
+    results_df.to_csv(os.path.join(results_dir, f'{model_name}_regression_results.csv'), index=False)
+    print(f"Regression results saved to outputs/results/{model_name}_regression_results.csv")
+
+    # Plot Actual vs Predicted
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=y_test, y=predictions)
+    plt.xlabel("Actual G3")
+    plt.ylabel("Predicted G3")
+    plt.title(f"Actual vs Predicted Final Grades ({model_name.upper()} Regression)")
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_regression_actual_vs_predicted.png'))
+    plt.close()
+
+
+def evaluate_classification_model(model, X_test, y_test, project_dir, model_name='xgboost'):
+    """
+    Evaluate the classification model and generate evaluation metrics and plots.
+    Additionally, save the input features with actual and predicted values.
+    """
+    predictions = model.predict(X_test)
+    probabilities = model.predict_proba(X_test)[:, 1]
+
+    acc = accuracy_score(y_test, predictions)
+    prec = precision_score(y_test, predictions)
+    rec = recall_score(y_test, predictions)
+    f1 = f1_score(y_test, predictions)
+    roc_auc = roc_auc_score(y_test, probabilities)
+
+    print(f"{model_name.upper()} Classification Evaluation:")
+    print(f"Accuracy: {acc:.2f}")
+    print(f"Precision: {prec:.2f}")
+    print(f"Recall: {rec:.2f}")
+    print(f"F1-Score: {f1:.2f}")
+    print(f"ROC-AUC: {roc_auc:.2f}")
+    print("\nClassification Report:")
+    print(classification_report(y_test, predictions))
+
+    # Combine input features with actual and predicted values
+    results_df = X_test.copy()
+    results_df['Actual'] = y_test
+    results_df['Predicted'] = predictions
+    results_df['Predicted_Probability'] = probabilities
+    results_dir = os.path.join(project_dir, 'outputs', 'results')
+    os.makedirs(results_dir, exist_ok=True)
+    results_df.to_csv(os.path.join(results_dir, f'{model_name}_classification_results.csv'), index=False)
+    print(f"Classification results saved to outputs/results/{model_name}_classification_results.csv")
+
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, predictions)
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title(f"Confusion Matrix ({model_name.upper()} Classification)")
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_classification_confusion_matrix.png'))
+    plt.close()
+
+    # ROC Curve
+    fpr, tpr, thresholds = roc_curve(y_test, probabilities)
+    plt.figure(figsize=(6, 4))
+    plt.plot(fpr, tpr, label=f'ROC curve (area = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(f"ROC Curve ({model_name.upper()} Classification)")
+    plt.legend(loc='lower right')
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_classification_roc_curve.png'))
+    plt.close()
+
 
 if __name__ == "__main__":
     main()
