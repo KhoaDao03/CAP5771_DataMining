@@ -1,5 +1,5 @@
 # src/xgboost_model.py
-
+import shap
 import pandas as pd
 from xgboost import XGBRegressor, XGBClassifier
 from sklearn.metrics import (
@@ -70,6 +70,11 @@ def xgboost_regression(X_train, y_train):
         n_jobs=-1
     )
     xgb_reg.fit(X_train, y_train)
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.abspath(os.path.join(script_dir, '..'))
+    plot_learning_curve(xgb_reg, X_train, y_train,project_dir ,model_name='xgboost_regression')
+
     return xgb_reg
 
 def evaluate_regression_model(model, X_test, y_test, project_dir, model_name='xgboost'):
@@ -127,6 +132,11 @@ def xgboost_classification(X_train, y_train):
         eval_metric='logloss'
     )
     xgb_clf.fit(X_train, y_train)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.abspath(os.path.join(script_dir, '..'))
+    print("\n--- Learning Curve for Classification ---")
+    plot_learning_curve(xgb_clf, X_train, y_train, project_dir, model_name='xgboost_classification')
+
     return xgb_clf
 
 def evaluate_classification_model(model, X_test, y_test, project_dir, model_name='xgboost'):
@@ -196,94 +206,97 @@ def save_model(model, project_dir, filename):
     joblib.dump(model, os.path.join(models_dir, filename))
     print(f"Model saved to outputs/models/{filename}")
 
-def main():
-
+def plot_feature_importance(model, X_train, project_dir, model_name='xgboost'):
     """
-    Main function to execute XGBoost Regression and Classification.
+    Plot feature importance for the trained XGBoost model.
+
+    Parameters:
+    - model: Trained XGBoost model.
+    - X_train (DataFrame): Training features.
+    - project_dir (str): Absolute path to the project root directory.
+    - model_name (str): Name of the model.
     """
-    # Suppress any unnecessary warnings for cleaner output
-    warnings.filterwarnings("ignore")
-
-    # Determine the absolute path to the project root
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_dir = os.path.abspath(os.path.join(script_dir, '..'))
-
-    # Ensure output directories exist
-    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
-    models_dir = os.path.join(project_dir, 'outputs', 'models')
-    os.makedirs(figures_dir, exist_ok=True)
-    os.makedirs(models_dir, exist_ok=True)
-
-    # -------------------------
-    # XGBoost Regression
-    # -------------------------
-    print("\n--- XGBoost Regression ---\n")
-    # Load data for regression
-    X_train_reg, X_test_reg, y_train_reg, y_test_reg = load_data(project_dir, task='regression')
-
-    # Train XGBoost Regressor
-    xgb_reg_model = xgboost_regression(X_train_reg, y_train_reg)
-
-    # Evaluate Regression Model
-    evaluate_regression_model(xgb_reg_model, X_test_reg, y_test_reg, project_dir, model_name='xgboost')
-
-    # Save Regression Model
-    save_model(xgb_reg_model, project_dir, filename='xgboost_regression_model.pkl')
-
-    # ----------------------------
-    # XGBoost Classification
-    # ----------------------------
-    print("\n--- XGBoost Classification ---\n")
-    # Load data for classification
-    X_train_clf, X_test_clf, y_train_clf, y_test_clf = load_data(project_dir, task='classification')
-
-    # Train XGBoost Classifier
-    xgb_clf_model = xgboost_classification(X_train_clf, y_train_clf)
-
-    # Evaluate Classification Model
-    evaluate_classification_model(xgb_clf_model, X_test_clf, y_test_clf, project_dir, model_name='xgboost')
-
-    # Save Classification Model
-    save_model(xgb_clf_model, project_dir, filename='xgboost_classification_model.pkl')
-
-
-
-def evaluate_regression_model(model, X_test, y_test, project_dir, model_name='xgboost'):
-    """
-    Evaluate the regression model and generate evaluation metrics and plots.
-    Additionally, save the input features with actual and predicted values.
-    """
-    predictions = model.predict(X_test)
-    mae = mean_absolute_error(y_test, predictions)
-    mse = mean_squared_error(y_test, predictions)
-    rmse = np.sqrt(mse)
-    r2 = r2_score(y_test, predictions)
-
-    print(f"{model_name.upper()} Regression Evaluation:")
-    print(f"MAE: {mae:.2f}")
-    print(f"MSE: {mse:.2f}")
-    print(f"RMSE: {rmse:.2f}")
-    print(f"R² Score: {r2:.2f}")
-
-    # Combine input features with actual and predicted values
-    results_df = X_test.copy()
-    results_df['Actual'] = y_test
-    results_df['Predicted'] = predictions
-    results_dir = os.path.join(project_dir, 'outputs', 'results')
-    os.makedirs(results_dir, exist_ok=True)
-    results_df.to_csv(os.path.join(results_dir, f'{model_name}_regression_results.csv'), index=False)
-    print(f"Regression results saved to outputs/results/{model_name}_regression_results.csv")
-
-    # Plot Actual vs Predicted
-    plt.figure(figsize=(8, 6))
-    sns.scatterplot(x=y_test, y=predictions)
-    plt.xlabel("Actual G3")
-    plt.ylabel("Predicted G3")
-    plt.title(f"Actual vs Predicted Final Grades ({model_name.upper()} Regression)")
+    plt.figure(figsize=(10, 8))
+    feature_importances = model.feature_importances_
+    sorted_idx = np.argsort(feature_importances)
+    plt.barh(X_train.columns[sorted_idx], feature_importances[sorted_idx])
+    plt.xlabel("Feature Importance")
+    plt.title(f"Feature Importance ({model_name.upper()})")
     figures_dir = os.path.join(project_dir, 'outputs', 'figures')
     os.makedirs(figures_dir, exist_ok=True)
-    plt.savefig(os.path.join(figures_dir, f'{model_name}_regression_actual_vs_predicted.png'))
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_feature_importance.png'))
     plt.close()
+    print(f"Feature importance plot saved to outputs/figures/{model_name}_feature_importance.png")
+
+def plot_residuals(y_test, predictions, project_dir, model_name='xgboost'):
+    """
+    Plot residuals to evaluate the regression model.
+
+    Parameters:
+    - y_test (Series): Actual target values.
+    - predictions (Series): Predicted target values.
+    - project_dir (str): Absolute path to the project root directory.
+    - model_name (str): Name of the model.
+    """
+    residuals = y_test - predictions
+    plt.figure(figsize=(8, 6))
+    sns.histplot(residuals, kde=True)
+    plt.axvline(0, color='r', linestyle='--')
+    plt.xlabel("Residuals")
+    plt.title(f"Residuals Distribution ({model_name.upper()})")
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_residuals.png'))
+    plt.close()
+    print(f"Residuals plot saved to outputs/figures/{model_name}_residuals.png")
+
+
+def plot_shap_values(model, X_train, project_dir, model_name='xgboost'):
+    """
+    Plot SHAP values for feature interpretation.
+
+    Parameters:
+    - model: Trained model.
+    - X_train (DataFrame): Training features.
+    - project_dir (str): Absolute path to the project root directory.
+    - model_name (str): Name of the model.
+    """
+    explainer = shap.Explainer(model)
+    shap_values = explainer(X_train)
+    
+    plt.figure(figsize=(10, 8))
+    shap.summary_plot(shap_values, X_train, show=False)
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_shap_summary.png'))
+    plt.close()
+    print(f"SHAP summary plot saved to outputs/figures/{model_name}_shap_summary.png")
+
+from sklearn.model_selection import learning_curve
+
+def plot_learning_curve(model, X_train, y_train, project_dir, model_name='xgboost'):
+    """
+    Plot learning curve for the model.
+    """
+    train_sizes, train_scores, test_scores = learning_curve(
+        model, X_train, y_train, train_sizes=np.linspace(0.1, 1.0, 5), cv=5, scoring='r2'
+    )
+    train_scores_mean = np.mean(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    
+    plt.figure(figsize=(8, 6))
+    plt.plot(train_sizes, train_scores_mean, label='Training score')
+    plt.plot(train_sizes, test_scores_mean, label='Cross-validation score')
+    plt.xlabel("Training Examples")
+    plt.ylabel("Score")
+    plt.title(f"Learning Curve ({model_name.upper()})")
+    plt.legend()
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_learning_curve.png'))
+    plt.close()
+
+
 
 
 def evaluate_classification_model(model, X_test, y_test, project_dir, model_name='xgboost'):
@@ -342,6 +355,107 @@ def evaluate_classification_model(model, X_test, y_test, project_dir, model_name
     plt.legend(loc='lower right')
     plt.savefig(os.path.join(figures_dir, f'{model_name}_classification_roc_curve.png'))
     plt.close()
+
+def evaluate_regression_model(model, X_test, y_test, project_dir, model_name='xgboost'):
+    """
+    Evaluate the regression model and generate evaluation metrics and plots.
+    Additionally, save the input features with actual and predicted values.
+    """
+    predictions = model.predict(X_test)
+    mae = mean_absolute_error(y_test, predictions)
+    mse = mean_squared_error(y_test, predictions)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, predictions)
+
+    print(f"{model_name.upper()} Regression Evaluation:")
+    print(f"MAE: {mae:.2f}")
+    print(f"MSE: {mse:.2f}")
+    print(f"RMSE: {rmse:.2f}")
+    print(f"R² Score: {r2:.2f}")
+
+    # Combine input features with actual and predicted values
+    results_df = X_test.copy()
+    results_df['Actual'] = y_test
+    results_df['Predicted'] = predictions
+    results_dir = os.path.join(project_dir, 'outputs', 'results')
+    os.makedirs(results_dir, exist_ok=True)
+    results_df.to_csv(os.path.join(results_dir, f'{model_name}_regression_results.csv'), index=False)
+    print(f"Regression results saved to outputs/results/{model_name}_regression_results.csv")
+
+    # Plot Actual vs Predicted
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=y_test, y=predictions)
+    plt.xlabel("Actual G3")
+    plt.ylabel("Predicted G3")
+    plt.title(f"Actual vs Predicted Final Grades ({model_name.upper()} Regression)")
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_regression_actual_vs_predicted.png'))
+    plt.close()
+    plot_residuals(y_test, predictions, project_dir, model_name='xgboost')
+    print("\n--- Learning Curve for Regression ---")
+
+
+
+def main():
+
+    """
+    Main function to execute XGBoost Regression and Classification.
+    """
+    # Suppress any unnecessary warnings for cleaner output
+    warnings.filterwarnings("ignore")
+
+    # Determine the absolute path to the project root
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.abspath(os.path.join(script_dir, '..'))
+
+    # Ensure output directories exist
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    models_dir = os.path.join(project_dir, 'outputs', 'models')
+    os.makedirs(figures_dir, exist_ok=True)
+    os.makedirs(models_dir, exist_ok=True)
+
+    # -------------------------
+    # XGBoost Regression
+    # -------------------------
+    print("\n--- XGBoost Regression ---\n")
+    # Load data for regression
+    X_train_reg, X_test_reg, y_train_reg, y_test_reg = load_data(project_dir, task='regression')
+
+    # Train XGBoost Regressor
+    xgb_reg_model = xgboost_regression(X_train_reg, y_train_reg)
+
+    # Evaluate Regression Model
+    evaluate_regression_model(xgb_reg_model, X_test_reg, y_test_reg, project_dir, model_name='xgboost')
+
+    # Save Regression Model
+    save_model(xgb_reg_model, project_dir, filename='xgboost_regression_model.pkl')
+
+    # ----------------------------
+    # XGBoost Classification
+    # ----------------------------
+    print("\n--- XGBoost Classification ---\n")
+    # Load data for classification
+    X_train_clf, X_test_clf, y_train_clf, y_test_clf = load_data(project_dir, task='classification')
+
+    # Train XGBoost Classifier
+    xgb_clf_model = xgboost_classification(X_train_clf, y_train_clf)
+
+    # Evaluate Classification Model
+    evaluate_classification_model(xgb_clf_model, X_test_clf, y_test_clf, project_dir, model_name='xgboost')
+
+    # Save Classification Model
+    save_model(xgb_clf_model, project_dir, filename='xgboost_classification_model.pkl')
+        # Plot feature importance for regression
+    plot_feature_importance(xgb_reg_model, X_train_reg, project_dir, model_name='xgboost')
+
+    # Plot feature importance for classification
+    plot_feature_importance(xgb_clf_model, X_train_clf, project_dir, model_name='xgboost')
+
+
+    plot_shap_values(xgb_reg_model, X_train_reg, project_dir, model_name='xgboost')
+    plot_shap_values(xgb_clf_model, X_train_clf, project_dir, model_name='xgboost')
+
 
 
 if __name__ == "__main__":
