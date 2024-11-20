@@ -205,7 +205,7 @@ def save_model(model, project_dir, filename):
     print(f"Model saved to outputs/models/{filename}")
 
 def visualize_tree(model, feature_names, project_dir, model_name='decision_tree'):
-    plt.figure(figsize=(250, 100))  # Increase figure size for more space
+    plt.figure(figsize=(100, 100))  # Increase figure size for more space
     plot_tree(
         model,
         feature_names=feature_names,

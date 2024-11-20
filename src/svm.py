@@ -1,5 +1,6 @@
 # src/svm.py
 
+from sklearn.decomposition import PCA
 import pandas as pd
 from sklearn.svm import SVR, SVC
 from sklearn.metrics import (
@@ -112,6 +113,8 @@ def svm_classification(X_train, y_train):
     """
     svc = SVC(kernel='rbf', C=1.0, probability=True, random_state=42)
     svc.fit(X_train, y_train)
+
+    
     return svc
 
 def evaluate_classification_model(model, X_test, y_test, project_dir, model_name='svm'):
@@ -166,6 +169,7 @@ def evaluate_classification_model(model, X_test, y_test, project_dir, model_name
     plt.legend(loc='lower right')
     plt.savefig(os.path.join(figures_dir, f'{model_name}_classification_roc_curve.png'))
     plt.close()
+    
 
 def save_model(model, scaler, project_dir, filename):
     """
@@ -182,6 +186,124 @@ def save_model(model, scaler, project_dir, filename):
     # Save model and scaler together
     joblib.dump({'model': model, 'scaler': scaler}, os.path.join(models_dir, filename))
     print(f"Model saved to outputs/models/{filename}")
+
+
+def plot_svm_decision_boundary(model, X, y, project_dir, title='SVM Decision Boundary', model_name='svm'):
+    """
+    Plots the decision boundary of an SVM classifier after reducing dimensions to 2D using PCA.
+    Saves the plot to the figures folder.
+    
+    Parameters:
+    - model: Trained SVM model.
+    - X (array): Feature data.
+    - y (array): Target labels.
+    - project_dir (str): Path to the project directory.
+    - title (str): Title of the plot.
+    - model_name (str): Name of the model (used for saving files).
+    """
+    # Reduce data to 2D
+    pca = PCA(n_components=2)
+    X_reduced = pca.fit_transform(X)
+
+    # Create a mesh to plot in
+    x_min, x_max = X_reduced[:, 0].min() - 1, X_reduced[:, 0].max() + 1
+    y_min, y_max = X_reduced[:, 1].min() - 1, X_reduced[:, 1].max() + 1
+    xx, yy = np.meshgrid(
+        np.linspace(x_min, x_max, 500),
+        np.linspace(y_min, y_max, 500)
+    )
+
+    # Flatten the grid to pass into the classifier
+    grid = np.c_[xx.ravel(), yy.ravel()]
+    grid_original = pca.inverse_transform(grid)
+    Z = model.predict(grid_original).reshape(xx.shape)
+
+    plt.figure(figsize=(10, 6))
+    plt.contourf(xx, yy, Z, alpha=0.2, cmap=plt.cm.coolwarm)
+    scatter = plt.scatter(
+        X_reduced[:, 0], X_reduced[:, 1], c=y, s=30, cmap=plt.cm.coolwarm, edgecolors='k'
+    )
+    plt.legend(handles=scatter.legend_elements()[0], labels=['Class 0', 'Class 1'])
+    plt.title(title)
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+
+    # Save the plot to the figures folder
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_decision_boundary.png'))
+    plt.close()
+
+def plot_regression_residuals(model, X_test, y_test, project_dir, title='Residuals Plot', model_name='svm'):
+    """
+    Plots the residuals of the regression model predictions and saves to the figures folder.
+    
+    Parameters:
+    - model: Trained regression model.
+    - X_test (array): Testing features.
+    - y_test (array): Actual target values.
+    - project_dir (str): Path to the project directory.
+    - title (str): Title of the plot.
+    - model_name (str): Name of the model (used for saving files).
+    """
+    predictions = model.predict(X_test)
+    residuals = y_test - predictions
+
+    plt.figure(figsize=(10, 6))
+    sns.residplot(x=predictions, y=residuals, lowess=True, line_kws={'color': 'red'})
+    plt.xlabel('Predicted Values')
+    plt.ylabel('Residuals')
+    plt.title(title)
+
+    # Save the plot to the figures folder
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_regression_residuals.png'))
+    plt.close()
+
+
+def plot_support_vectors(model, X, y, project_dir, title='Support Vectors', model_name='svm'):
+    """
+    Plots the support vectors of an SVM classifier after reducing dimensions to 2D using PCA.
+    Saves the plot to the figures folder.
+    
+    Parameters:
+    - model: Trained SVM model.
+    - X (array): Feature data.
+    - y (array): Target labels.
+    - project_dir (str): Path to the project directory.
+    - title (str): Title of the plot.
+    - model_name (str): Name of the model (used for saving files).
+    """
+    pca = PCA(n_components=2)
+    X_reduced = pca.fit_transform(X)
+    support_vectors = model.support_vectors_
+    support_vectors_reduced = pca.transform(support_vectors)
+
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(
+        X_reduced[:, 0], X_reduced[:, 1], c=y, s=30, cmap=plt.cm.coolwarm, edgecolors='k'
+    )
+    plt.scatter(
+        support_vectors_reduced[:, 0],
+        support_vectors_reduced[:, 1],
+        facecolors='none',
+        edgecolors='yellow',
+        s=100,
+        label='Support Vectors'
+    )
+    plt.legend(handles=scatter.legend_elements()[0], labels=['Class 0', 'Class 1'])
+    plt.title(title)
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+
+    # Save the plot to the figures folder
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_support_vectors.png'))
+    plt.close()
+
+
 
 def main():
     """
@@ -212,7 +334,7 @@ def main():
 
     # Evaluate Regression Model
     evaluate_regression_model(svm_reg_model, X_test_reg, y_test_reg, project_dir, model_name='svm')
-
+    
     # Save Regression Model and Scaler
     save_model(svm_reg_model, scaler_reg, project_dir, filename='svm_regression_model.pkl')
 
@@ -226,8 +348,18 @@ def main():
     # Train SVM Classifier
     svm_clf_model = svm_classification(X_train_clf, y_train_clf)
 
-    # Evaluate Classification Model
-    evaluate_classification_model(svm_clf_model, X_test_clf, y_test_clf, project_dir, model_name='svm')
+  # Visualize SVM Classification
+    print("\nVisualizing SVM Classification Decision Boundary...")
+    X_combined = np.vstack((X_train_clf, X_test_clf))
+    y_combined = np.hstack((y_train_clf, y_test_clf))
+    plot_svm_decision_boundary(svm_clf_model, X_combined, y_combined, project_dir, title='SVM Classification Decision Boundary')
+
+    print("\nVisualizing SVM Support Vectors...")
+    plot_support_vectors(svm_clf_model, X_combined, y_combined, project_dir, title='SVM Support Vectors')
+
+    # Visualize SVM Regression
+    print("\nVisualizing SVM Regression Residuals...")
+    plot_regression_residuals(svm_reg_model, X_test_reg, y_test_reg, project_dir, title='SVM Regression Residuals')
 
     # Save Classification Model and Scaler
     save_model(svm_clf_model, scaler_clf, project_dir, filename='svm_classification_model.pkl')

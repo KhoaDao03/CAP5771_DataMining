@@ -11,4 +11,6 @@ streamlit
 os-sys
 shap
 warnings
-
+pydot
+statsmodels
+graphviz
