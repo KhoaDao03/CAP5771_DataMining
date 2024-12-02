@@ -7,6 +7,7 @@ import joblib
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 def load_data(project_dir):
@@ -57,7 +58,7 @@ def evaluate_model(model, X_test, y_test, project_dir):
     predictions = model.predict(X_test)
     mae = mean_absolute_error(y_test, predictions)
     mse = mean_squared_error(y_test, predictions)
-    rmse = mean_squared_error(y_test, predictions, squared=False)
+    rmse = np.sqrt(mse)  # Manually calculate RMSE
     r2 = r2_score(y_test, predictions)
 
     print("Linear Regression Evaluation:")

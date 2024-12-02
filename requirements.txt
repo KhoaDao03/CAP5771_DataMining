@@ -4,4 +4,6 @@ scikit-learn
 matplotlib
 seaborn
 xgboost
+tensorflow   # For ANN
+keras
 joblib

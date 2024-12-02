@@ -8,27 +8,13 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 
 def load_data(mat_path, por_path):
-    """
-    Loads the Math and Portuguese student datasets.
-
-    :param mat_path: Path to the Math dataset (student-mat.csv).
-    :param por_path: Path to the Portuguese dataset (student-por.csv).
-    :return: Two dataframes - one for Math and one for Portuguese.
-    """
+    # Load Math and Portuguese datasets
     df_mat = pd.read_csv(mat_path, sep=';')
     df_por = pd.read_csv(por_path, sep=';')
     return df_mat, df_por
 
 
 def merge_datasets(df_mat, df_por):
-    """
-    Merges the Math and Portuguese datasets on common student attributes and handles duplicate students.
-    For students appearing in both datasets, their grades are averaged.
-
-    :param df_mat: Dataframe for the Math dataset.
-    :param df_por: Dataframe for the Portuguese dataset.
-    :return: A merged dataframe of both datasets.
-    """
     # Merge datasets on all common columns except the grade columns
     common_cols = ['school', 'sex', 'age', 'address', 'famsize', 'Pstatus',
                    'Medu', 'Fedu', 'Mjob', 'Fjob', 'reason', 'guardian',
@@ -37,50 +23,32 @@ def merge_datasets(df_mat, df_por):
                    'internet', 'romantic', 'famrel', 'freetime', 'goout',
                    'Dalc', 'Walc', 'health', 'absences']
 
-    df_merged = pd.merge(df_mat, df_por, on=common_cols,
-                         suffixes=('_mat', '_por'))
+    # Merge datasets on common columns
+    df_merged = pd.merge(df_mat, df_por, on=common_cols, suffixes=('_mat', '_por'))
 
     # For students present in both datasets, take the average of their grades
-    grade_cols = ['G1_mat', 'G2_mat', 'G3_mat', 'G1_por', 'G2_por', 'G3_por']
     for grade in ['G1', 'G2', 'G3']:
-        df_merged[grade] = df_merged[[
-            f'{grade}_mat', f'{grade}_por']].mean(axis=1)
+        df_merged[grade] = df_merged[[f'{grade}_mat', f'{grade}_por']].mean(axis=1)
 
     # Drop original grade columns
+    grade_cols = ['G1_mat', 'G2_mat', 'G3_mat', 'G1_por', 'G2_por', 'G3_por']
     df_merged.drop(columns=grade_cols, inplace=True)
 
-    # Concatenate unique students from both datasets
-    df_unique_mat = df_mat[~df_mat.index.isin(df_merged.index)][['school', 'sex', 'age', 'address',
-                                                                 'famsize', 'Pstatus', 'Medu', 'Fedu',
-                                                                 'Mjob', 'Fjob', 'reason', 'guardian',
-                                                                 'traveltime', 'studytime', 'failures',
-                                                                 'schoolsup', 'famsup', 'paid',
-                                                                 'activities', 'nursery', 'higher',
-                                                                 'internet', 'romantic', 'famrel',
-                                                                 'freetime', 'goout', 'Dalc', 'Walc',
-                                                                 'health', 'absences', 'G1', 'G2', 'G3']]
-    df_unique_por = df_por[~df_por.index.isin(df_merged.index)][['school', 'sex', 'age', 'address',
-                                                                 'famsize', 'Pstatus', 'Medu', 'Fedu',
-                                                                 'Mjob', 'Fjob', 'reason', 'guardian',
-                                                                 'traveltime', 'studytime', 'failures',
-                                                                 'schoolsup', 'famsup', 'paid',
-                                                                 'activities', 'nursery', 'higher',
-                                                                 'internet', 'romantic', 'famrel',
-                                                                 'freetime', 'goout', 'Dalc', 'Walc',
-                                                                 'health', 'absences', 'G1', 'G2', 'G3']]
-    df_final = pd.concat(
-        [df_merged, df_unique_mat, df_unique_por], ignore_index=True)
+    # Identify unique students in df_mat
+    df_mat_only = df_mat.merge(df_merged[common_cols], on=common_cols, how='left', indicator=True)
+    df_mat_only = df_mat_only[df_mat_only['_merge'] == 'left_only'].drop(columns='_merge')
+
+    # Identify unique students in df_por
+    df_por_only = df_por.merge(df_merged[common_cols], on=common_cols, how='left', indicator=True)
+    df_por_only = df_por_only[df_por_only['_merge'] == 'left_only'].drop(columns='_merge')
+
+    # Combine all students
+    df_final = pd.concat([df_merged, df_mat_only, df_por_only], ignore_index=True)
 
     return df_final
 
 
 def preprocess_data(df):
-    """
-    Handles missing values, encodes categorical variables, and scales numerical features.
-
-    :param df: Dataframe to preprocess.
-    :return: Preprocessed dataframe, label encoders used for categorical features, and the scaler.
-    """
     # Handle missing values (if any)
     df = df.replace('?', np.nan)
     df = df.dropna()
@@ -108,29 +76,15 @@ def preprocess_data(df):
     return df, label_encoders, scaler
 
 
-def split_data(df, target, test_size=0.2, random_state=42):
-    """
-    Splits the dataframe into training and testing sets.
-
-    :param df: Dataframe to split.
-    :param target: Target column for prediction (either G3 or pass).
-    :param test_size: Proportion of the dataset to include in the test split.
-    :param random_state: Seed used by the random number generator.
-    :return: Training and testing sets for features and target.
-    """
-    X = df.drop(columns=[target])
+def split_data(df, target, drop_cols=None, test_size=0.2, random_state=42):
+    if drop_cols is None:
+        drop_cols = []
+    X = df.drop(columns=[target] + drop_cols)
     y = df[target]
     return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
 
 def prepare_classification_target(df, threshold=10):
-    """
-    Creates a binary target column 'pass' where 1 represents a final grade (G3) of 10 or above, and 0 otherwise.
-
-    :param df: Dataframe to add the binary 'pass' column to.
-    :param threshold: Grade threshold to determine pass/fail.
-    :return: Updated dataframe with the binary 'pass' column.
-    """
     # Create a binary target: 1 if G3 >= threshold, else 0
     df['pass'] = df['G3'].apply(lambda x: 1 if x >= threshold else 0)
     return df
@@ -172,11 +126,11 @@ def main():
     df.to_csv(preprocessed_path, index=False)
     print(f"Preprocessed data saved to {preprocessed_path}")
 
-    # Split data for regression
-    X_train_reg, X_test_reg, y_train_reg, y_test_reg = split_data(df, 'G3')
+    # Split data for regression (exclude 'G3' and 'pass' from features)
+    X_train_reg, X_test_reg, y_train_reg, y_test_reg = split_data(df, 'G3', drop_cols=['G3', 'pass'])
 
-    # Split data for classification
-    X_train_clf, X_test_clf, y_train_clf, y_test_clf = split_data(df, 'pass')
+    # Split data for classification (exclude 'G3' from features)
+    X_train_clf, X_test_clf, y_train_clf, y_test_clf = split_data(df, 'pass', drop_cols=['G3'])
 
     # Save splits
     splits = {
