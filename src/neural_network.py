@@ -50,12 +50,20 @@ def load_data(project_dir, task='regression'):
     else:
         raise ValueError("Task must be 'regression' or 'classification'")
 
-    # Scale features
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    # Load the scaler used in data preprocessing
+    scaler = joblib.load(os.path.join(outputs_dir, 'scaler.pkl'))
+
+    # Numeric columns to scale
+    numeric_cols = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime',
+                    'failures', 'famrel', 'freetime', 'goout',
+                    'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2']
+
+    # Apply scaling to numeric columns
+    X_train[numeric_cols] = scaler.transform(X_train[numeric_cols])
+    X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
 
     return X_train, X_test, y_train.squeeze(), y_test.squeeze(), scaler
+
 
 def ann_regression(X_train, y_train):
     """
@@ -103,6 +111,17 @@ def evaluate_regression_model(model, X_test, y_test, project_dir, model_name='an
     os.makedirs(figures_dir, exist_ok=True)
     plt.savefig(os.path.join(figures_dir, f'{model_name}_regression_actual_vs_predicted.png'))
     plt.close()
+
+    # After predictions
+    predictions = model.predict(X_test).flatten()
+
+    # Actual values
+    actual = y_test  # Loaded from test set
+
+    # Compare
+    comparison = pd.DataFrame({'Actual': actual, 'Predicted': predictions})
+    # print(comparison.head(50))
+
 
 def ann_classification(X_train, y_train):
     """
@@ -170,19 +189,29 @@ def evaluate_classification_model(model, X_test, y_test, project_dir, model_name
     plt.savefig(os.path.join(figures_dir, f'{model_name}_classification_roc_curve.png'))
     plt.close()
 
+    # After predictions
+    probabilities = model.predict(X_test).flatten()
+    predictions = (probabilities >= 0.5).astype(int)
+
+    # Actual values
+    actual = y_test  # Loaded from test set
+
+    # Compare
+    comparison = pd.DataFrame({'Actual': actual, 'Predicted': predictions})
+    # print(comparison.head(50))
+
+
 def save_model(model, scaler, project_dir, filename):
     """
     Save the trained model and scaler to the models directory.
     """
     models_dir = os.path.join(project_dir, 'outputs', 'models')
     os.makedirs(models_dir, exist_ok=True)
-    # Ensure the filename uses the .keras extension
-    if not filename.endswith('.keras'):
-        filename = filename.replace('.h5', '.keras')
     # Save model in Keras format
     model.save(os.path.join(models_dir, filename))
     # Save scaler
-    joblib.dump(scaler, os.path.join(models_dir, f"{filename}_scaler.pkl"))
+    scaler_filename = os.path.join(models_dir, f"{filename}_scaler.pkl")
+    joblib.dump(scaler, scaler_filename)
     print(f"Model and scaler saved to outputs/models/{filename}")
 
 def main():

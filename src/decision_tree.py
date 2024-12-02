@@ -1,4 +1,6 @@
 # src/decision_tree.py
+import matplotlib.pyplot as plt
+from sklearn.tree import plot_tree  # Add this import
 
 import pandas as pd
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
@@ -202,6 +204,35 @@ def save_model(model, project_dir, filename):
     joblib.dump(model, os.path.join(models_dir, filename))
     print(f"Model saved to outputs/models/{filename}")
 
+def visualize_tree(model, feature_names, project_dir, model_name='decision_tree'):
+    plt.figure(figsize=(100, 100))  # Increase figure size for more space
+    plot_tree(
+        model,
+        feature_names=feature_names,
+        filled=True,
+        rounded=True,
+        fontsize=10,  # Decrease font size for better fitting
+        max_depth=10,   # Limit tree depth for better visibility
+        proportion=True  # Adjust node spacing based on proportion of samples
+
+    )
+    # plt.figure(figsize=(20, 20))  # Increase figure size for more space
+    # plot_tree(
+    #     model,
+    #     feature_names=feature_names,
+    #     filled=True,
+    #     rounded=True,
+    #     fontsize=10,  # Decrease font size for better fitting
+    #     max_depth=10,   # Limit tree depth for better visibility
+    #     proportion=True  # Adjust node spacing based on proportion of samples
+
+    # )
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_tree_visualization.png'))
+    plt.close()
+
+
 def main():
     """
     Main function to execute Decision Tree Regression and Classification.
@@ -256,6 +287,25 @@ def main():
 
     # Save Classification Model
     save_model(dt_clf_model, project_dir, filename='decision_tree_classification_model.pkl')
+
+    # Decision Tree Regression
+    dt_reg_model = decision_tree_regression(X_train_reg, y_train_reg)
+    visualize_tree(
+        dt_reg_model,
+        X_train_reg.columns,
+        project_dir,
+        model_name='decision_tree_regression'
+    )
+
+    # Decision Tree Classification
+    dt_clf_model = decision_tree_classification(X_train_clf, y_train_clf)
+    visualize_tree(
+        dt_clf_model,
+        X_train_clf.columns,
+        project_dir,
+        model_name='decision_tree_classification'
+    )
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 # src/random_forest.py
-
+from sklearn.tree import plot_tree
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import (
@@ -194,6 +194,76 @@ def save_model(model, project_dir, filename):
     joblib.dump(model, os.path.join(models_dir, filename))
     print(f"Model saved to outputs/models/{filename}")
 
+
+def visualize_single_tree(model, X_train, project_dir, tree_index=0, model_name='random_forest'):
+    """
+    Visualize a single tree from the Random Forest model.
+
+    Parameters:
+    - model: Trained Random Forest model.
+    - X_train (DataFrame): Training features.
+    - project_dir (str): Path to save the plot.
+    - tree_index (int): Index of the tree to visualize.
+    - model_name (str): Name of the model.
+    """
+    estimator = model.estimators_[tree_index]
+    plt.figure(figsize=(20, 10))
+    plot_tree(estimator, feature_names=X_train.columns, filled=True, rounded=True, fontsize=10)
+    plt.title(f'Decision Tree {tree_index} from {model_name.replace("_", " ").title()}')
+    
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_tree_{tree_index}.png'))
+    plt.close()
+    print(f"Tree {tree_index} visualization saved to {figures_dir}/{model_name}_tree_{tree_index}.png")
+
+
+def visualize_multiple_trees(model, X_train, project_dir, num_trees=3, max_depth=10, model_name='random_forest'):
+    """
+    Visualize multiple trees from a Random Forest model in a single image with improved spacing.
+
+    Parameters:
+    - model: Trained Random Forest model.
+    - X_train (DataFrame): Training features.
+    - project_dir (str): Path to save the plot.
+    - num_trees (int): Number of trees to visualize.
+    - max_depth (int): Maximum depth of the trees to display for simplicity.
+    - model_name (str): Name of the model.
+    """
+    # Ensure the number of trees to plot does not exceed the number of estimators in the model
+    num_trees = min(num_trees, len(model.estimators_))
+
+    # Set up the plot grid with increased figure size and spacing
+    fig, axes = plt.subplots(nrows=1, ncols=num_trees, figsize=(10 * num_trees, 8))
+    if num_trees == 1:
+        axes = [axes]  # Ensure axes is always iterable
+
+    # Plot each tree in the model
+    for i in range(num_trees):
+        estimator = model.estimators_[i]
+        plot_tree(
+            estimator, 
+            feature_names=X_train.columns, 
+            filled=True, 
+            rounded=True, 
+            ax=axes[i], 
+            max_depth=max_depth,  # Limit the depth for clarity
+            proportion=True,      # Scale nodes according to samples
+            fontsize=10
+        )
+        axes[i].set_title(f'Tree {i + 1}', fontsize=12)
+
+    # Adjust spacing between subplots
+    plt.subplots_adjust(wspace=0.5)
+    plt.tight_layout()
+
+    # Save the plot to a file
+    figures_dir = os.path.join(project_dir, 'outputs', 'figures')
+    os.makedirs(figures_dir, exist_ok=True)
+    plt.savefig(os.path.join(figures_dir, f'{model_name}_multiple_trees.png'), bbox_inches='tight')
+    plt.close()
+    print(f"Multiple trees visualization saved to {figures_dir}/{model_name}_multiple_trees.png")
+
 def main():
     """
     Main function to execute Random Forest Regression and Classification.
@@ -242,6 +312,8 @@ def main():
 
     # Save Classification Model
     save_model(rf_clf_model, project_dir, filename='random_forest_classification_model.pkl')
+    visualize_single_tree(rf_clf_model, X_train_clf, project_dir, tree_index=0, model_name='random_forest')
+    visualize_multiple_trees(rf_clf_model, X_train_clf, project_dir, num_trees=3, model_name='random_forest')
 
 if __name__ == "__main__":
     main()

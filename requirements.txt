@@ -7,3 +7,10 @@ xgboost
 tensorflow   # For ANN
 keras
 joblib
+streamlit
+os-sys
+shap
+warnings
+pydot
+statsmodels
+graphviz
