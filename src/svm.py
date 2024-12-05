@@ -357,10 +357,6 @@ def main():
     print("\nVisualizing SVM Support Vectors...")
     plot_support_vectors(svm_clf_model, X_combined, y_combined, project_dir, title='SVM Support Vectors')
 
-    # Visualize SVM Regression
-    print("\nVisualizing SVM Regression Residuals...")
-    plot_regression_residuals(svm_reg_model, X_test_reg, y_test_reg, project_dir, title='SVM Regression Residuals')
-
     # Save Classification Model and Scaler
     save_model(svm_clf_model, scaler_clf, project_dir, filename='svm_classification_model.pkl')
 
