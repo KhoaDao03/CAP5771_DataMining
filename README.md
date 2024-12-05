@@ -1,4 +1,3 @@
-# Updating README
 # Student Performance Prediction Project
 
 This project aims to predict student academic performance using advanced machine learning techniques and comprehensive socioeconomic feature analysis. Leveraging both regression and classification models, the project not only forecasts final grades but also classifies students as pass or fail. Additionally, an interactive web application has been developed to facilitate real-time predictions and insights for educators and administrators. 
