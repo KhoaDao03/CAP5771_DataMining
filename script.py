@@ -6,32 +6,32 @@ def run_scripts():
 
         # Data Preprocessing
         print("Running Data Preprocessing")
-        subprocess.run(["python", "src/data_preprocessing.py"], check=True)
+        subprocess.run(["python3", "src/data_preprocessing.py"], check=True)
         
         # Train the models
         print("Linear Regression")
-        subprocess.run(["python", "src/linear_regression.py"], check=True)
+        subprocess.run(["python3", "src/linear_regression.py"], check=True)
         
         print("Logistic Regression")
-        subprocess.run(["python", "src/logistic_regression.py"], check=True)
+        subprocess.run(["python3", "src/logistic_regression.py"], check=True)
 
         print("Decision Tree")
-        subprocess.run(["python", "src/decision_tree.py"], check=True)
+        subprocess.run(["python3", "src/decision_tree.py"], check=True)
 
         print("Random Forest")
-        subprocess.run(["python", "src/random_forest.py"], check=True)
+        subprocess.run(["python3", "src/random_forest.py"], check=True)
 
         print("Support Vector Machines (SVM):")
-        subprocess.run(["python", "src/svm.py"], check=True)
+        subprocess.run(["python3", "src/svm.py"], check=True)
 
         print("Artificial Neural Networks (ANN)")
-        subprocess.run(["python", "src/neural_network.py"], check=True)
+        subprocess.run(["python3", "src/neural_network.py"], check=True)
 
         print("XGBoost")
-        subprocess.run(["python", "src/xgboost_model.py"], check=True)
+        subprocess.run(["python3", "src/xgboost_model.py"], check=True)
 
         print("K-Means Clustering")
-        subprocess.run(["python", "src/k_means_clustering.py"], check=True)
+        subprocess.run(["python3", "src/k_means_clustering.py"], check=True)
 
         
 
@@ -39,7 +39,7 @@ def run_scripts():
     except subprocess.CalledProcessError as e:
         print(f"Error while running a script: {e}")
     except FileNotFoundError as e:
-        print(f"Script not found or Python is not properly configured: {e}")
+        print(f"Script not found or Python3 is not properly configured: {e}")
 
     try:    
         # Launching Web Application 
