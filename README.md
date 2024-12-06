@@ -87,6 +87,8 @@ OR
 python3 script.py
 ```
 
+#### Note: The data preprocessing will run first, the models will run immediately after, the web app will lauch after these. After testing the web app, you might need to manually close the script to quit the python application.
+
 ## 2. Running Data Preprocessing
 
 Execute the data preprocessing script to prepare the data for modeling:
