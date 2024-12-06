@@ -1,6 +1,6 @@
 # Student Performance Prediction Project
 
-This project aims to predict student academic performance using advanced machine learning techniques and comprehensive socioeconomic feature analysis. Leveraging both regression and classification models, the project not only forecasts final grades but also classifies students as pass or fail. Additionally, an interactive web application has been developed to facilitate real-time predictions and insights for educators and administrators. 
+This project aims to predict student academic performance using advanced machine learning techniques and socioeconomic feature analysis. Our project can predict final grades and classify students as pass or fail using both regression and classification models. A web application has been developed to facilitate real-time predictions and insights for educators and users.
 
 The data used in this project comes from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Student+Performance).
 
@@ -28,31 +28,77 @@ cd CAP5771_DataMining
 ```
 
 ### Create a Virtual Environment (Optional but Recommended):
+
+Depending on your system and Python version you can use:
 ```bash
 python -m venv venv
+```
+OR
+```bash
+python3 -m venv venv
+```
+
+```bash
 source venv/bin/activate      # On Windows: venv\Scripts\activate
 ```
 
+## Requirements
+
 ### Install Dependencies:
+Make sure to install the required Python packages before running the scripts:
+
 ```bash
 pip install -r requirements.txt
 ```
+OR
+```bash
+pip3 install -r requirements.txt
+```
 
----
+The `requirements.txt` file should include the following dependencies:
+
+```
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+xgboost
+tensorflow
+keras
+joblib
+streamlit
+os-sys
+shap
+warnings
+pydot
+statsmodels
+graphviz
+```
 
 ## Note: To run everything at once:
 
+Depending on your system and Python version you can use:
 ```bash
 python script.py
+```
+OR
+```bash
+python3 script.py
 ```
 
 ## 2. Running Data Preprocessing
 
 Execute the data preprocessing script to prepare the data for modeling:
+
+Depending on your system and Python version you can use:
 ```bash
 python src/data_preprocessing.py
 ```
-
+OR
+```bash
+python3 src/data_preprocessing.py
+```
 ---
 
 ## 3. Training and Evaluating Models
@@ -60,44 +106,92 @@ python src/data_preprocessing.py
 Train and evaluate each machine learning model by running the corresponding scripts:
 
 - **Linear Regression:**
-    ```bash
-    python src/linear_regression.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/linear_regression.py
+```
+OR
+```bash
+python3 src/linear_regression.py
+```
 
 - **Logistic Regression:**
-    ```bash
-    python src/logistic_regression.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/logistic_regression.py
+```
+OR
+```bash
+python3 src/logistic_regression.py
+```
 
 - **Decision Tree:**
-    ```bash
-    python src/decision_tree.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/decision_tree.py
+```
+OR
+```bash
+python3 src/decision_tree.py
+```
 
 - **Random Forest:**
-    ```bash
-    python src/random_forest.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/random_forest.py
+```
+OR
+```bash
+python3 src/random_forest.py
+```
 
 - **Support Vector Machines (SVM):**
-    ```bash
-    python src/svm.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/svm.py
+```
+OR
+```bash
+python3 src/svm.py
+```
 
 - **Artificial Neural Networks (ANN):**
-    ```bash
-    python src/neural_network.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/neural_network.py
+```
+OR
+```bash
+python3 src/neural_network.py
+```
 
 - **XGBoost:**
-    ```bash
-    python src/xgboost_model.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/xgboost_model.py
+```
+OR
+```bash
+python3 src/xgboost_model.py
+```
 
 - **K-Means Clustering:**
-    ```bash
-    python src/k_means_clustering.py
-    ```
+
+Depending on your system and Python version you can use:
+```bash
+python src/k_means_clustering.py
+```
+OR
+```bash
+python3 src/k_means_clustering.py
+```
 
 Each script will train the respective model, evaluate its performance, generate visualizations, and save the trained model in the `outputs/models/` directory.
 
@@ -121,11 +215,10 @@ Access the application by navigating to `http://localhost:8501` in your web brow
 - **Preprocessed Data:** Access the preprocessed datasets in the `outputs/` folder.
 - **Encoders and Scalers:** Label encoders and scaler objects are located in the `outputs/encoders/` directory.
 
-
 <br/>
 <br/>
 
-# Description of the project
+# Description of the Project
 
 ## 1. Data Preprocessing
 
@@ -165,8 +258,13 @@ Data preprocessing is the foundational step in preparing raw datasets for modeli
 
 To run the preprocessing:
 
+Depending on your system and Python version you can use:
 ```bash
 python src/data_preprocessing.py
+```
+OR
+```bash
+python3 src/data_preprocessing.py
 ```
 
 **Outputs:**
@@ -182,11 +280,6 @@ python src/data_preprocessing.py
 **Script:** `linear_regression.py`  
 Predicts the final grade (`G3`) of students.
 
-**Running the Script:**
-```bash
-python src/linear_regression.py
-```
-
 **Outputs:**
 - Model: `outputs/models/linear_regression_model.pkl`
 - Visualizations: `outputs/figures/linear_regression_actual_vs_predicted.png`
@@ -196,11 +289,6 @@ python src/linear_regression.py
 ### Logistic Regression Model
 **Script:** `logistic_regression.py`  
 Classifies students into pass/fail categories.
-
-**Running the Script:**
-```bash
-python src/logistic_regression.py
-```
 
 **Outputs:**
 - Model: `outputs/models/logistic_regression_model.pkl`
@@ -212,11 +300,6 @@ python src/logistic_regression.py
 **Script:** `decision_tree.py`  
 Trains both regression and classification Decision Tree models.
 
-**Running the Script:**
-```bash
-python src/decision_tree.py
-```
-
 **Outputs:**
 - Models for regression and classification
 - Various visualizations including decision tree structures
@@ -226,11 +309,6 @@ python src/decision_tree.py
 ### Random Forest Model
 **Script:** `random_forest.py`  
 Builds ensemble models for regression and classification.
-
-**Running the Script:**
-```bash
-python src/random_forest.py
-```
 
 **Outputs:**
 - Models for regression and classification
@@ -242,11 +320,6 @@ python src/random_forest.py
 **Script:** `svm.py`  
 Implements SVM models for regression and classification.
 
-**Running the Script:**
-```bash
-python src/svm.py
-```
-
 **Outputs:**
 - Models for regression and classification
 - Decision boundary visualizations
@@ -256,11 +329,6 @@ python src/svm.py
 ### Artificial Neural Networks (ANN) Model
 **Script:** `neural_network.py`  
 Uses deep learning for nonlinear data relationships.
-
-**Running the Script:**
-```bash
-python src/neural_network.py
-```
 
 **Outputs:**
 - Models: Saved in `.h5` format
@@ -272,11 +340,6 @@ python src/neural_network.py
 **Script:** `xgboost_model.py`  
 Employs gradient boosting for high performance.
 
-**Running the Script:**
-```bash
-python src/xgboost_model.py
-```
-
 **Outputs:**
 - Models for regression and classification
 - SHAP and feature importance visualizations
@@ -287,21 +350,13 @@ python src/xgboost_model.py
 **Script:** `k_means_clustering.py`  
 Clusters students into groups based on their attributes.
 
-**Running the Script:**
-```bash
-python src/k_means_clustering.py
-```
-
 **Outputs:**
 - Model: `outputs/models/kmeans_model.pkl`
 - Cluster visualizations
 
-
 ## 3. Web Application Deployment
 
-## 3. Web Application Deployment
-
-The student performance prediction models are deployed in an interactive web application built with **Streamlit**, enabling real-time predictions based on user-inputted student data.
+Our student performance prediction models are deployed in an interactive web application built with **Streamlit**, enabling real-time predictions based on user-inputted student data.
 
 ### 3.1 Features
 - **Intuitive Interface:** Input student data easily using a sidebar.
@@ -316,46 +371,16 @@ The student performance prediction models are deployed in an interactive web app
 - **Preprocessing:** Ensures input data undergoes the same preprocessing as training data.
 - **Pipeline:** Processes input data to generate predictions for both regression (final grades) and classification (pass/fail).
 
-
 ---
 
 ### Running the Web Application
+
 To run the web application locally, execute the following command:
 ```bash
 streamlit run src/web_app.py
 ```
 
 Ensure that all dependencies are installed, and the trained models are located in the `outputs/models/` directory as outlined above.
-
-
-## Requirements
-
-Make sure to install the required Python packages before running the scripts:
-
-```bash
-pip install -r requirements.txt
-```
-
-The `requirements.txt` file should include the following dependencies:
-
-```
-pandas
-numpy
-scikit-learn
-matplotlib
-seaborn
-xgboost
-tensorflow
-keras
-joblib
-streamlit
-os-sys
-shap
-warnings
-pydot
-statsmodels
-graphviz
-```
 
 
 ## Project Structure
@@ -372,7 +397,7 @@ The project is structured into several components, each with its own functionali
 │   app.py                          # Streamlit web application for student performance prediction
 │   README.md                       # Project documentation and overview
 │   requirements.txt                # List of Python dependencies required to run the project
-│   script.py                       # script file to run the whole project   
+│   script.py                       # Script file to run the whole project   
 |
 ├── .idea
 │   │   .gitignore                   # Specifies intentionally untracked files to ignore
@@ -430,32 +455,32 @@ The project is structured into several components, each with its own functionali
 │   │       higher_encoder.pkl               # Saved encoder for 'higher' feature
 │   │       internet_encoder.pkl             # Saved encoder for 'internet' feature
 │   │       label_encoder_activities.pkl      # Additional encoder for 'activities'
-│   │       label_encoder_address.pkl          # Additional encoder for 'address'
-│   │       label_encoder_famsize.pkl          # Additional encoder for 'famsize'
-│   │       label_encoder_famsup.pkl           # Additional encoder for 'famsup'
-│   │       label_encoder_Fjob.pkl             # Additional encoder for 'Fjob'
-│   │       label_encoder_guardian.pkl         # Additional encoder for 'guardian'
-│   │       label_encoder_higher.pkl           # Additional encoder for 'higher'
-│   │       label_encoder_internet.pkl         # Additional encoder for 'internet'
-│   │       label_encoder_Mjob.pkl             # Additional encoder for 'Mjob'
-│   │       label_encoder_nursery.pkl          # Additional encoder for 'nursery'
-│   │       label_encoder_paid.pkl             # Additional encoder for 'paid'
-│   │       label_encoder_Pstatus.pkl          # Additional encoder for 'Pstatus'
-│   │       label_encoder_reason.pkl           # Additional encoder for 'reason'
-│   │       label_encoder_romantic.pkl         # Additional encoder for 'romantic'
-│   │       label_encoder_school.pkl           # Additional encoder for 'school'
-│   │       label_encoder_schoolsup.pkl        # Additional encoder for 'schoolsup'
-│   │       label_encoder_sex.pkl              # Additional encoder for 'sex'
-│   │       Mjob_encoder.pkl                   # Additional encoder for 'Mjob'
-│   │       nursery_encoder.pkl                # Additional encoder for 'nursery'
-│   │       paid_encoder.pkl                   # Additional encoder for 'paid'
-│   │       Pstatus_encoder.pkl                # Additional encoder for 'Pstatus'
-│   │       reason_encoder.pkl                 # Additional encoder for 'reason'
-│   │       romantic_encoder.pkl               # Additional encoder for 'romantic'
-│   │       scaler.pkl                         # Additional scaler
-│   │       schoolsup_encoder.pkl              # Additional encoder for 'schoolsup'
-│   │       school_encoder.pkl                 # Additional encoder for 'school'
-│   │       sex_encoder.pkl                    # Additional encoder for 'sex'
+│   │       label_encoder_address.pkl         # Additional encoder for 'address'
+│   │       label_encoder_famsize.pkl         # Additional encoder for 'famsize'
+│   │       label_encoder_famsup.pkl          # Additional encoder for 'famsup'
+│   │       label_encoder_Fjob.pkl            # Additional encoder for 'Fjob'
+│   │       label_encoder_guardian.pkl        # Additional encoder for 'guardian'
+│   │       label_encoder_higher.pkl          # Additional encoder for 'higher'
+│   │       label_encoder_internet.pkl        # Additional encoder for 'internet'
+│   │       label_encoder_Mjob.pkl            # Additional encoder for 'Mjob'
+│   │       label_encoder_nursery.pkl         # Additional encoder for 'nursery'
+│   │       label_encoder_paid.pkl            # Additional encoder for 'paid'
+│   │       label_encoder_Pstatus.pkl         # Additional encoder for 'Pstatus'
+│   │       label_encoder_reason.pkl          # Additional encoder for 'reason'
+│   │       label_encoder_romantic.pkl        # Additional encoder for 'romantic'
+│   │       label_encoder_school.pkl          # Additional encoder for 'school'
+│   │       label_encoder_schoolsup.pkl       # Additional encoder for 'schoolsup'
+│   │       label_encoder_sex.pkl             # Additional encoder for 'sex'
+│   │       Mjob_encoder.pkl                  # Additional encoder for 'Mjob'
+│   │       nursery_encoder.pkl               # Additional encoder for 'nursery'
+│   │       paid_encoder.pkl                  # Additional encoder for 'paid'
+│   │       Pstatus_encoder.pkl               # Additional encoder for 'Pstatus'
+│   │       reason_encoder.pkl                # Additional encoder for 'reason'
+│   │       romantic_encoder.pkl              # Additional encoder for 'romantic'
+│   │       scaler.pkl                        # Additional scaler
+│   │       schoolsup_encoder.pkl             # Additional encoder for 'schoolsup'
+│   │       school_encoder.pkl                # Additional encoder for 'school'
+│   │       sex_encoder.pkl                   # Additional encoder for 'sex'
 │   │       
 │   ├── figures
 │   │       ann_classification_confusion_matrix.png       # Confusion matrix for ANN classification model
@@ -523,25 +548,4 @@ The project is structured into several components, each with its own functionali
         xgboost_model.py                           # Script to train and evaluate XGBoost models
 ```
 
-
-
-## Conclusion
-
-### Summary of Findings
-- **Top-Performing Models:** Random Forest and XGBoost demonstrated superior accuracy for regression and classification tasks.
-- **Key Influential Factors:** Parental education levels and study time were significant predictors of performance.
-- **Clustering Insights:** K-Means clustering revealed distinct student profiles, suggesting potential for personalized education strategies.
-
-### Practical Considerations
-- **Model Selection:** Ensemble methods like Random Forest and XGBoost effectively handle complex educational data.
-- **Feature Importance:** Identifying key factors enables targeted educational interventions.
-- **Scalability:** Balancing model accuracy and computational efficiency ensures practical deployment.
-
-### Future Research Directions
-- **Additional Data:** Incorporate attendance, behavior, and extracurricular activities to refine predictions.
-- **Model Interpretability:** Expand the use of SHAP values to improve model transparency.
-- **Real-Time Deployment:** Build a real-time prediction system for continuous student support.
-- **Longitudinal Studies:** Evaluate the long-term effectiveness of predictive models across multiple academic years.
-
-## Final Remarks
-This project highlights the importance of integrating academic, socioeconomic, and demographic data with advanced machine learning techniques. By providing an interactive web application, educational institutions can make informed, data-driven decisions to support student success and optimize resources.
+---
